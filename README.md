@@ -1,20 +1,22 @@
-# Secure Multi-Database Authentication System
+# Secure Multi-Database Authentication System (Railway Optimized)
 
-A complete, production-ready, and secure authentication system demonstrating the integration of multiple databases: **MySQL** for relational accounts, **MongoDB** for flexible profiles, and **Redis** for high-performance session tracking. Built with PHP 8.2 and styled with a modern glassmorphic Bootstrap 5 theme.
+A complete, production-ready, and secure authentication system utilizing **MySQL** (Relational account credentials), **MongoDB Atlas** (Flexible profile storage), and **Redis Cloud** (Session state store). Fully containerized for one-click deployment directly to **Railway**.
 
 ---
 
 ## Features
 
-- **Multi-DB Architecture**: Relational account data, non-relational profile metadata, and in-memory session tracking.
-- **Glassmorphism UI**: Beautiful dark-mode user interfaces styled with Bootstrap 5 and custom CSS.
-- **AJAX Driven**: Dynamic interactions powered by jQuery AJAX.
-- **Production-Ready Security**:
-  - Secure Bcrypt password hashing (`password_hash` with cost 12).
-  - Prepared statements only (SQL injection mitigation).
-  - Multi-tier cross-site scripting (XSS) mitigation (Input sanitization and context-aware output escaping).
-  - HTTPOnly, secure, and SameSite cookie policies.
-  - Transactional user creation (reverts MySQL entry if MongoDB profile initialization fails).
+- **Multi-DB Production Stack**: Integrates managed MySQL with MongoDB Atlas and Redis Cloud.
+- **Glassmorphism UI**: Beautiful, interactive screens styled with Bootstrap 5 and custom CSS.
+- **AJAX Interactions**: Dynamic form flows built with jQuery (no page reloads).
+- **Auto-Migrations**: Automatically waits for MySQL to be online and executes DB migrations (`sql/init.sql`) on start.
+- **Dynamic Port Binding**: Startup script overrides default Apache configurations to align with Railway's injected `$PORT` variables.
+- **Secure Handling**:
+  - Bcrypt hashing (`password_hash` with cost 12).
+  - Exclusively prepared queries to mitigate SQL Injection (SQLi).
+  - Double XSS protection (Input tags-sanitization and output HTML-escaping).
+  - Secure session cookies (HTTPOnly, SameSite).
+  - Transactional registration (reverts MySQL credentials insert if MongoDB Atlas fails).
 
 ---
 
@@ -24,45 +26,73 @@ A complete, production-ready, and secure authentication system demonstrating the
 project/
   ├── assets/
   │   ├── css/
-  │   │   └── style.css            # Custom CSS Glassmorphism tokens & styles
+  │   │   └── style.css            # Custom CSS Glassmorphic variables
   │   ├── images/
-  │   │   └── default-avatar.png   # Premium neon visual avatar asset
+  │   │   └── default-avatar.png   # Premium neon abstract profile picture
   │   └── js/
-  │       ├── login.js             # Sign-in logic & input validation
-  │       ├── profile.js           # AJAX dashboard & updates controller
-  │       └── register.js          # Sign-up logic & validations
+  │       ├── login.js             # User login validation & AJAX submitter
+  │       ├── profile.js           # AJAX Dashboard data fetcher & updates
+  │       └── register.js          # User registration validation & AJAX submitter
   ├── php/
-  │   ├── bootstrap.php            # Autoloader & dotenv environment loader
-  │   ├── db.php                   # MySQL connection interface
-  │   ├── mongo.php                # MongoDB client database selector
-  │   ├── redis.php                # Redis server client interface
-  │   ├── register.php             # Registration endpoint
-  │   ├── login.php                # Authentication & session generation
-  │   ├── profile.php              # Retrieve/Update profile details
+  │   ├── bootstrap.php            # Environment loader & JSON responders
+  │   ├── db.php                   # MySQL connection wrapper (PDO)
+  │   ├── mongo.php                # MongoDB Atlas connection (MongoDB Client)
+  │   ├── redis.php                # Redis Cloud connection (Predis Client)
+  │   ├── register.php             # Register REST endpoint
+  │   ├── login.php                # Authentication REST endpoint
+  │   ├── profile.php              # Retrieve and edit profile details
+  │   ├── migrate.php              # Connection checking and schema migrations
   │   └── logout.php               # De-authorize token & expire cookie
   ├── sql/
-  │   └── init.sql                 # MySQL schema auto-migration script
-  ├── .env.example                 # Configuration template file
-  ├── .gitignore                   # Ignore list for version control
-  ├── apache.conf                  # Containerized server permissions config
-  ├── composer.json                # Project dependencies config
+  │   └── init.sql                 # MySQL schema initialization SQL script
+  ├── .env.example                 # Configuration template
+  ├── .gitignore                   # Version control ignore rules
+  ├── apache.conf                  # Directory permissions and virtual hosts
+  ├── composer.json                # PHP dependency management
   ├── docker-compose.yml           # Local multi-service environment setup
-  ├── Dockerfile                   # Deployment container image specs
-  ├── index.html                   # Static landing introduction page
-  ├── login.html                   # Sign-in web page
-  ├── profile.html                 # Dashboard web page
-  ├── register.html                # Registration web page
-  ├── railway.json                 # Railway service deployment rules
+  ├── Dockerfile                   # Railway compilation specs
+  ├── index.html                   # Project landing/welcome page
+  ├── login.html                   # Sign-in portal page
+  ├── profile.html                 # Dashboard panel interface
+  ├── register.html                # Signup portal page
+  ├── railway.json                 # Railway service behavior config
+  ├── start.sh                     # Docker entrypoint (migration + port bind)
   └── README.md                    # System documentation
 ```
 
 ---
 
-## Database Specifications
+## Connection Environments
 
-### 1. MySQL Schema
-Table: `users`
-Used for credential authorization.
+All connection parameters are managed via environment variables. Ensure the following keys are provided in Railway or local `.env`:
+
+### 1. MySQL Variables
+* `MYSQL_HOST`: The MySQL hostname (e.g. Railway MySQL database host).
+* `MYSQL_PORT`: Port (default `3306`).
+* `MYSQL_DATABASE`: Database name (e.g. `auth_system`).
+* `MYSQL_USER`: Username.
+* `MYSQL_PASSWORD`: User password.
+
+### 2. MongoDB Atlas Variables
+* `MONGO_URI`: The MongoDB Atlas connection string.
+  - *Example*: `mongodb+srv://<username>:<password>@cluster.mongodb.net/auth_system?retryWrites=true&w=majority`
+
+### 3. Redis Cloud Variables
+* `REDIS_HOST`: Hostname of the Redis Cloud database.
+* `REDIS_PORT`: Port of the Redis Cloud database.
+* `REDIS_PASSWORD`: Connection password.
+
+### 4. General Settings
+* `APP_ENV`: `production` or `development`.
+* `APP_DEBUG`: `false` or `true`.
+* `SESSION_SECRET`: Secure string used for hash verification.
+
+---
+
+## Database Schemas
+
+### MySQL (`users` table)
+Relational account definitions.
 ```sql
 CREATE TABLE users (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -73,157 +103,87 @@ CREATE TABLE users (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 ```
 
-### 2. MongoDB Collection Structure
-Collection: `profiles`
-Holds flexible user profile details linked by relational `user_id`.
+### MongoDB Atlas (`profiles` collection)
+Rich profile documents linked via MySQL `user_id`.
 ```json
 {
   "_id": "ObjectId",
   "user_id": 1,
   "name": "Full Name",
   "age": 25,
-  "bio": "User biography statement",
-  "interests": ["Coding", "Technology", "Design"]
+  "bio": "User biography",
+  "interests": ["Technology", "Design"]
 }
 ```
 
-### 3. Redis Session Layout
-Data Type: `Hash`
-Key: `session:<session_token>` (where session_token is a secure cryptographically generated 64 hex character token)
-```
+### Redis Cloud Sessions
+Key format: `session:<session_token>` (64 hex characters)
+Data type: **Hash**
 Fields:
-  - user_id: 1 (Integer ID)
-  - token: "<session_token>" (String)
-  - login_time: 1783933558 (UNIX Timestamp)
-```
-*Note: Key expires automatically after 2 hours (7200s) by default, or 30 days (2592000s) if "Remember Me" is activated.*
+- `user_id`: Numeric primary key from MySQL
+- `token`: Match token string
+- `login_time`: UNIX epoch timestamp
 
 ---
 
-## API Documentation
+## API Specifications
 
-All API responses are formatted in JSON. Example:
-```json
-{
-  "status": "success",
-  "message": "Operation completed successfully."
-}
-```
+All endpoints respond with standardized JSON.
 
-### 1. Registration API
-- **Endpoint**: `POST /php/register.php`
-- **Payload**: Form-Data or JSON
-  - `username` (string, required)
-  - `email` (string, required)
-  - `password` (string, required)
-  - `confirm_password` (string, required)
-- **Response**:
-  - Success: `{"status": "success", "message": "Registration Successful. You can now login."}`
-  - Error: `{"status": "error", "message": "Passwords do not match."}`
+### 1. Registration
+- **URL**: `POST /php/register.php`
+- **Fields**: `username`, `email`, `password`, `confirm_password`
+- **Success Response**: `{"status": "success", "message": "Registration Successful"}`
 
-### 2. Login API
-- **Endpoint**: `POST /php/login.php`
-- **Payload**: Form-Data or JSON
-  - `email` (string, required)
-  - `password` (string, required)
-  - `remember_me` (boolean/string, optional)
-- **Response**:
-  - Success: `{"status": "success", "message": "Login Successful", "user": {"id": 1, "username": "johndoe"}}`
-  - Sets browser cookie: `session_token` (HTTPOnly, secure, Lax).
+### 2. Login
+- **URL**: `POST /php/login.php`
+- **Fields**: `email`, `password`, `remember_me`
+- **Success Response**: `{"status": "success", "message": "Login Successful", ...}`
+- **Cookies**: Sets browser cookie `session_token` (HTTPOnly, secure).
 
-### 3. Profile API (Load)
-- **Endpoint**: `GET /php/profile.php`
-- **Headers**: Requires cookie `session_token`
-- **Response**:
-  - Success: 
-    ```json
-    {
-      "status": "success",
-      "message": "Profile loaded",
-      "profile": {
-        "user_id": 1,
-        "username": "johndoe",
-        "email": "johndoe@example.com",
-        "created_at": "2026-07-13 14:30:00",
-        "name": "John Doe",
-        "age": 25,
-        "bio": "Bio content...",
-        "interests": ["Coding", "Design"]
-      }
-    }
-    ```
-  - Error: `{"status": "error", "message": "Unauthorized. Session has expired."}` (HTTP 401)
+### 3. Profile (Fetch & Update)
+- **URL**: `GET` / `POST /php/profile.php`
+- **Success Response (GET)**: Loads combined user metadata.
+- **Success Response (POST)**: Updates user's Name, Age, Bio, and Interests in MongoDB Atlas.
 
-### 4. Profile API (Update)
-- **Endpoint**: `POST /php/profile.php`
-- **Headers**: Requires cookie `session_token`
-- **Payload**: Form-Data or JSON
-  - `name` (string, optional)
-  - `age` (integer, optional)
-  - `bio` (string, optional)
-  - `interests` (comma-separated string or array, optional)
-- **Response**:
-  - Success: `{"status": "success", "message": "Profile updated successfully."}`
-
-### 5. Logout API
-- **Endpoint**: `POST /php/logout.php`
-- **Headers**: Requires cookie `session_token`
-- **Response**:
-  - Success: `{"status": "success", "message": "Logged out successfully."}`
-  - Clears `session_token` cookie from browser.
+### 4. Logout
+- **URL**: `POST /php/logout.php`
+- **Success Response**: Clears Redis session key and expires client cookie.
 
 ---
 
-## Installation & Setup
+## Deployment to Railway
 
-### Option 1: Running locally using Docker Compose (Recommended)
-This runs the entire stack (Apache/PHP, MySQL, MongoDB, Redis) locally without manually installing any database engines.
+The project is structured to deploy smoothly directly from your GitHub repository to Railway.
 
-1. Ensure [Docker](https://www.docker.com/) and Docker Compose are installed.
-2. Clone the repository and navigate to the directory:
-   ```bash
-   git clone <repo-url>
-   cd project
-   ```
-3. Copy the environment template:
-   ```bash
-   cp .env.example .env
-   ```
-4. Spin up the containers:
-   ```bash
-   docker-compose up -d --build
-   ```
-5. Wait for databases to initialize, then access the app at:
-   `http://localhost:8080`
+### Step 1: Connect your repository
+1. Go to [Railway](https://railway.app) and log in.
+2. Click **New Project** -> **Deploy from GitHub repo**.
+3. Select this repository.
 
-### Option 2: Manual Local Setup
-1. Setup Apache/Nginx web server with PHP 8.1+.
-2. Install PECL extensions `mongodb`.
-3. Install and run MySQL 8, MongoDB 6+, and Redis 7+.
-4. Create database `auth_system` in MySQL and import `sql/init.sql`.
-5. Populate local `.env` file with corresponding host IPs and credentials.
-6. Install PHP packages using Composer:
-   ```bash
-   composer install
-   ```
+### Step 2: Set up Database services
+You can attach databases directly within Railway or point to cloud endpoints:
+1. **MySQL**: Click **New** -> **Database** -> **MySQL** in Railway.
+2. **MongoDB Atlas**: Set up a free cluster on [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) and retrieve the connection URI.
+3. **Redis Cloud**: Set up a free instance on [Redis Cloud](https://redis.com/) and retrieve the host, port, and password.
 
----
+### Step 3: Link Environment Variables
+In your Railway web container service settings, navigate to **Variables** and link the following variables:
+1. Bind MySQL variables from Railway's MySQL database:
+   - `MYSQL_HOST` = `${{MySQL.MYSQLHOST}}`
+   - `MYSQL_PORT` = `${{MySQL.MYSQLPORT}}`
+   - `MYSQL_DATABASE` = `${{MySQL.MYSQLDATABASE}}`
+   - `MYSQL_USER` = `${{MySQL.MYSQLUSER}}`
+   - `MYSQL_PASSWORD` = `${{MySQL.MYSQLPASSWORD}}`
+2. Add your MongoDB Atlas environment variable:
+   - `MONGO_URI` = `mongodb+srv://...`
+3. Add your Redis Cloud environment variables:
+   - `REDIS_HOST` = `<your-redis-cloud-endpoint>`
+   - `REDIS_PORT` = `<your-redis-cloud-port>`
+   - `REDIS_PASSWORD` = `<your-redis-cloud-password>`
+4. Add generic environments:
+   - `APP_ENV` = `production`
+   - `APP_DEBUG` = `false`
+   - `SESSION_SECRET` = `<generate-a-secure-random-key>`
 
-## Deployment Configuration (Railway / Render)
-
-### Railway Deployment
-To deploy successfully on Railway:
-1. Railway automatically provisions services. Add **MySQL**, **MongoDB**, and **Redis** service attachments to your project in the Railway UI.
-2. Link the repository to the Web Service.
-3. Railway automatically sets connection environment variables. In the web service variables dashboard, map the default Railway variables:
-   - `MYSQL_HOST` to `${{MySQL.MYSQLHOST}}`
-   - `MYSQL_PORT` to `${{MySQL.MYSQLPORT}}`
-   - `MYSQL_DATABASE` to `${{MySQL.MYSQLDATABASE}}`
-   - `MYSQL_USER` to `${{MySQL.MYSQLUSER}}`
-   - `MYSQL_PASSWORD` to `${{MySQL.MYSQLPASSWORD}}`
-   - `MONGO_URI` to `${{MongoDB.MONGODB_URL}}`
-   - `REDIS_HOST` to `${{Redis.REDISHOST}}`
-   - `REDIS_PORT` to `${{Redis.REDISPORT}}`
-   - `REDIS_PASSWORD` to `${{Redis.REDISPASSWORD}}`
-   - Add `SESSION_SECRET` with a secure random key.
-4. The service will build automatically from the `Dockerfile` and go live.
+Railway will build the image from the `Dockerfile`, execute `start.sh` (running migrations to the MySQL service), and bind Apache automatically to the public address.

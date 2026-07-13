@@ -32,8 +32,14 @@ RUN composer install --no-interaction --no-dev --optimize-autoloader
 # Copy application files
 COPY . .
 
+# Fix CRLF carriage returns for Unix environment compatibility and set executable flag
+RUN sed -i 's/\r$//' start.sh && chmod +x start.sh
+
 # Adjust permissions for Apache
 RUN chown -R www-data:www-data /var/www/html
 
-# Expose HTTP port
+# Default documentation port
 EXPOSE 80
+
+# Configure startup entrypoint
+ENTRYPOINT ["/var/www/html/start.sh"]
