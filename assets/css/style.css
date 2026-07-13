@@ -1,0 +1,278 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
+:root {
+    --bg-dark: #09090e;
+    --card-bg: rgba(20, 20, 30, 0.6);
+    --border-glass: rgba(255, 255, 255, 0.08);
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --accent-blue: #6366f1;
+    --accent-magenta: #d946ef;
+    --accent-glow: linear-gradient(135deg, #6366f1 0%, #d946ef 100%);
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body {
+    font-family: 'Outfit', sans-serif;
+    background-color: var(--bg-dark);
+    color: var(--text-primary);
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+}
+
+/* Glowing backgrounds blobs */
+body::before, body::after {
+    content: "";
+    position: absolute;
+    width: 35vw;
+    height: 35vw;
+    border-radius: 50%;
+    filter: blur(120px);
+    z-index: -1;
+    opacity: 0.45;
+    pointer-events: none;
+    animation: float 20s infinite alternate ease-in-out;
+}
+
+body::before {
+    background: radial-gradient(circle, rgba(99, 102, 241, 0.6) 0%, rgba(0, 0, 0, 0) 70%);
+    top: -10%;
+    left: -10%;
+}
+
+body::after {
+    background: radial-gradient(circle, rgba(217, 70, 239, 0.5) 0%, rgba(0, 0, 0, 0) 70%);
+    bottom: -10%;
+    right: -10%;
+    animation-delay: -10s;
+}
+
+@keyframes float {
+    0% {
+        transform: translate(0, 0) scale(1);
+    }
+    100% {
+        transform: translate(5%, 10%) scale(1.1);
+    }
+}
+
+/* Glassmorphism Card */
+.glass-card {
+    background: var(--card-bg);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid var(--border-glass);
+    border-radius: 24px;
+    padding: 2.5rem;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    transition: var(--transition-smooth);
+}
+
+.glass-card:hover {
+    border-color: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 12px 40px 0 rgba(99, 102, 241, 0.15);
+}
+
+/* Glassmorphism Input Field */
+.glass-input {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    color: var(--text-primary) !important;
+    padding: 0.75rem 1rem;
+    transition: var(--transition-smooth);
+}
+
+.glass-input:focus {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: var(--accent-blue);
+    box-shadow: 0 0 15px rgba(99, 102, 241, 0.25);
+    outline: none;
+}
+
+.glass-input::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+}
+
+/* Select option workaround for dark background */
+select.glass-input option {
+    background-color: #0f172a;
+    color: var(--text-primary);
+}
+
+/* Interactive elements */
+.btn-glow {
+    background: var(--accent-glow);
+    border: none;
+    border-radius: 12px;
+    color: #fff;
+    font-weight: 600;
+    padding: 0.75rem 1.5rem;
+    position: relative;
+    z-index: 1;
+    overflow: hidden;
+    transition: var(--transition-smooth);
+}
+
+.btn-glow::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #d946ef 0%, #6366f1 100%);
+    opacity: 0;
+    z-index: -1;
+    transition: var(--transition-smooth);
+}
+
+.btn-glow:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(99, 102, 241, 0.4);
+    color: #fff;
+}
+
+.btn-glow:hover::before {
+    opacity: 1;
+}
+
+.btn-glow:active {
+    transform: translateY(0);
+}
+
+.btn-glow:disabled {
+    opacity: 0.6;
+    transform: none;
+    box-shadow: none;
+    cursor: not-allowed;
+}
+
+/* Secondary outline button */
+.btn-glass-outline {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-glass);
+    border-radius: 12px;
+    color: var(--text-primary);
+    font-weight: 500;
+    padding: 0.75rem 1.5rem;
+    transition: var(--transition-smooth);
+}
+
+.btn-glass-outline:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: var(--text-primary);
+}
+
+/* Form floating label adjustments */
+.form-floating > label {
+    color: rgba(255, 255, 255, 0.5);
+    transition: var(--transition-smooth);
+}
+
+.form-floating > .glass-input:focus ~ label,
+.form-floating > .glass-input:not(:placeholder-shown) ~ label {
+    color: var(--accent-blue);
+}
+
+/* Custom Toast Styling */
+.toast-container {
+    z-index: 1090;
+}
+
+.glass-toast {
+    background: rgba(20, 20, 30, 0.9) !important;
+    backdrop-filter: blur(12px) !important;
+    border: 1px solid var(--border-glass) !important;
+    border-radius: 14px !important;
+    color: var(--text-primary) !important;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.45) !important;
+}
+
+.glass-toast .toast-header {
+    background: rgba(255, 255, 255, 0.03) !important;
+    border-bottom: 1px solid var(--border-glass) !important;
+    color: var(--text-primary) !important;
+}
+
+.glass-toast .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+/* Navbar glassmorphism */
+.glass-nav {
+    background: rgba(9, 9, 14, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border-glass);
+    transition: var(--transition-smooth);
+}
+
+.glass-nav .navbar-brand {
+    font-weight: 700;
+    letter-spacing: 1px;
+    background: var(--accent-glow);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.glass-nav .nav-link {
+    color: var(--text-secondary);
+    font-weight: 500;
+    transition: var(--transition-smooth);
+}
+
+.glass-nav .nav-link:hover, .glass-nav .nav-link.active {
+    color: var(--text-primary);
+}
+
+/* Profiles detail badge */
+.interest-badge {
+    background: rgba(99, 102, 241, 0.12);
+    border: 1px solid rgba(99, 102, 241, 0.25);
+    color: #a5b4fc;
+    border-radius: 8px;
+    padding: 0.35rem 0.75rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    margin-right: 0.5rem;
+    margin-bottom: 0.5rem;
+    display: inline-block;
+    transition: var(--transition-smooth);
+}
+
+.interest-badge:hover {
+    background: rgba(99, 102, 241, 0.25);
+    border-color: rgba(99, 102, 241, 0.4);
+    transform: scale(1.05);
+}
+
+/* Profile image container */
+.profile-avatar-container {
+    position: relative;
+    width: 140px;
+    height: 140px;
+    margin: 0 auto 1.5rem auto;
+    border-radius: 50%;
+    padding: 4px;
+    background: var(--accent-glow);
+    box-shadow: 0 4px 20px rgba(99, 102, 241, 0.3);
+}
+
+.profile-avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 4px solid var(--bg-dark);
+}
+
+/* Spinner adjustment */
+.spinner-border-sm {
+    width: 1rem;
+    height: 1rem;
+    border-width: 0.15em;
+    margin-right: 0.5rem;
+}
