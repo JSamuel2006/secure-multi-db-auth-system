@@ -18,7 +18,8 @@ if (!empty($token)) {
 }
 
 // Delete cookie by setting expiration in the past
-$secure = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on';
+$secure = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') || 
+          (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
 setcookie('session_token', '', [
     'expires' => time() - 3600,
     'path' => '/',

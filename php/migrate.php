@@ -4,11 +4,11 @@ require_once __DIR__ . '/bootstrap.php';
 
 echo "=== Starting Database Migrations ===\n";
 
-$host = $_ENV['MYSQL_HOST'] ?? getenv('MYSQL_HOST') ?: '127.0.0.1';
-$port = $_ENV['MYSQL_PORT'] ?? getenv('MYSQL_PORT') ?: '3306';
-$db   = $_ENV['MYSQL_DATABASE'] ?? getenv('MYSQL_DATABASE') ?: 'auth_system';
-$user = $_ENV['MYSQL_USER'] ?? getenv('MYSQL_USER') ?: 'root';
-$pass = $_ENV['MYSQL_PASSWORD'] ?? getenv('MYSQL_PASSWORD') ?: '';
+$host = $_ENV['MYSQL_HOST'] ?? getenv('MYSQL_HOST') ?: $_ENV['MYSQLHOST'] ?? getenv('MYSQLHOST') ?: '127.0.0.1';
+$port = $_ENV['MYSQL_PORT'] ?? getenv('MYSQL_PORT') ?: $_ENV['MYSQLPORT'] ?? getenv('MYSQLPORT') ?: '3306';
+$db   = $_ENV['MYSQL_DATABASE'] ?? getenv('MYSQL_DATABASE') ?: $_ENV['MYSQLDATABASE'] ?? getenv('MYSQLDATABASE') ?: 'auth_system';
+$user = $_ENV['MYSQL_USER'] ?? getenv('MYSQL_USER') ?: $_ENV['MYSQLUSER'] ?? getenv('MYSQLUSER') ?: 'root';
+$pass = $_ENV['MYSQL_PASSWORD'] ?? getenv('MYSQL_PASSWORD') ?: $_ENV['MYSQLPASSWORD'] ?? getenv('MYSQLPASSWORD') ?: '';
 
 $dsn = "mysql:host=$host;port=$port;dbname=$db;charset=utf8mb4";
 $options = [

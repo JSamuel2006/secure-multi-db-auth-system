@@ -2,8 +2,11 @@
 // php/bootstrap.php
 
 // Ensure session cookie options are secure
+$isSecure = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') || 
+            (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
+
 ini_set('session.cookie_httponly', 1);
-ini_set('session.cookie_secure', isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 1 : 0);
+ini_set('session.cookie_secure', $isSecure ? 1 : 0);
 ini_set('session.use_only_cookies', 1);
 
 // Load autoloader
@@ -11,8 +14,8 @@ if (file_exists(__DIR__ . '/../vendor/autoload.php')) {
     require_once __DIR__ . '/../vendor/autoload.php';
 }
 
-// Load env variables
-if (file_exists(__DIR__ . '/../.env')) {
+// Load env variables safely
+if (class_exists('Dotenv\Dotenv') && file_exists(__DIR__ . '/../.env')) {
     $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/..');
     $dotenv->safeLoad();
 }

@@ -6,16 +6,15 @@ require_once __DIR__ . '/bootstrap.php';
  * Returns a MongoDB Database connection.
  */
 function getMongoConnection(): \MongoDB\Database {
-    $uri = $_ENV['MONGO_URI'] ?? getenv('MONGO_URI') ?: 'mongodb://127.0.0.1:27017/auth_system';
+    $uri = $_ENV['MONGO_URI'] ?? getenv('MONGO_URI') ?: 
+           $_ENV['MONGODB_URL'] ?? getenv('MONGODB_URL') ?: 
+           $_ENV['MONGO_URL'] ?? getenv('MONGO_URL') ?: 
+           'mongodb://127.0.0.1:27017/auth_system';
 
-    // Parse database name from URI if it exists
+    // Extract database name from URI safely using regex (supports mongodb+srv://)
     $dbName = 'auth_system';
-    $parsed = parse_url($uri);
-    if (isset($parsed['path'])) {
-        $dbName = ltrim($parsed['path'], '/');
-    }
-    if (empty($dbName)) {
-        $dbName = 'auth_system';
+    if (preg_match('/\/([a-zA-Z0-9_-]+)(?:\?|$)/', $uri, $matches)) {
+        $dbName = $matches[1];
     }
 
     try {

@@ -61,7 +61,8 @@ try {
 
     // Set HTTPOnly Cookie
     $cookieExpire = $rememberMe ? (time() + $ttl) : 0;
-    $secure = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on';
+    $secure = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') || 
+              (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
     
     setcookie('session_token', $token, [
         'expires' => $cookieExpire,

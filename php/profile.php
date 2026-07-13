@@ -21,11 +21,13 @@ try {
 
     if (empty($sessionData) || !isset($sessionData['user_id'])) {
         // Clear invalid cookie
+        $secure = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') || 
+                  (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
         setcookie('session_token', '', [
             'expires' => time() - 3600,
             'path' => '/',
             'domain' => '',
-            'secure' => isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on',
+            'secure' => $secure,
             'httponly' => true,
             'samesite' => 'Lax'
         ]);
@@ -129,6 +131,7 @@ try {
         $profilesCollection->updateOne(
             ['user_id' => $userId],
             ['$set' => [
+                'user_id' => $userId,
                 'name' => $sanitizedName,
                 'age' => $age !== '' ? (int)$age : '',
                 'bio' => $sanitizedBio,

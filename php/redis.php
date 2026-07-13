@@ -6,9 +6,9 @@ require_once __DIR__ . '/bootstrap.php';
  * Returns a Predis Client instance.
  */
 function getRedisConnection(): \Predis\Client {
-    $host = $_ENV['REDIS_HOST'] ?? getenv('REDIS_HOST') ?: '127.0.0.1';
-    $port = $_ENV['REDIS_PORT'] ?? getenv('REDIS_PORT') ?: '6379';
-    $password = $_ENV['REDIS_PASSWORD'] ?? getenv('REDIS_PASSWORD') ?: null;
+    $host = $_ENV['REDIS_HOST'] ?? getenv('REDIS_HOST') ?: $_ENV['REDISHOST'] ?? getenv('REDISHOST') ?: '127.0.0.1';
+    $port = $_ENV['REDIS_PORT'] ?? getenv('REDIS_PORT') ?: $_ENV['REDISPORT'] ?? getenv('REDISPORT') ?: '6379';
+    $password = $_ENV['REDIS_PASSWORD'] ?? getenv('REDIS_PASSWORD') ?: $_ENV['REDISPASSWORD'] ?? getenv('REDISPASSWORD') ?: null;
 
     $parameters = [
         'scheme' => 'tcp',
