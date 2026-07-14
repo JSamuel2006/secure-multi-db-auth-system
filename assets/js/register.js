@@ -4,7 +4,7 @@ $(document).ready(function() {
     const $btnText = $('#btnText');
     const $btnSpinner = $('#btnSpinner');
 
-    // Toast Utility
+    // ── Toast Utility ──────────────────────────────────────────
     function showToast(message, title = 'Notification', type = 'info') {
         const toastEl = document.getElementById('statusToast');
         const toastBody = document.getElementById('toastBody');
@@ -14,7 +14,6 @@ $(document).ready(function() {
         toastBody.textContent = message;
         toastTitle.textContent = title;
 
-        // Reset classes
         toastIcon.className = 'bi me-2';
         if (type === 'success') {
             toastIcon.classList.add('bi-check-circle-fill', 'text-success');
@@ -28,10 +27,14 @@ $(document).ready(function() {
         toast.show();
     }
 
-    // Input Validation Helpers
+    // ── Validation Helpers ─────────────────────────────────────
     function showError($input, message) {
         $input.addClass('is-invalid');
-        $input.siblings('.invalid-feedback').text(message);
+        const feedbackId = $input.attr('id') + 'Error';
+        const $fb = $('#' + feedbackId).length
+            ? $('#' + feedbackId)
+            : $input.siblings('.invalid-feedback');
+        $fb.text(message);
     }
 
     function clearErrors() {
@@ -39,29 +42,67 @@ $(document).ready(function() {
         $form.find('.invalid-feedback').text('');
     }
 
-    // Live validation triggers
     $form.find('.glass-input').on('input', function() {
         $(this).removeClass('is-invalid');
     });
 
-    // Handle Form Submission
+    // ── Show / Hide Password Toggles ───────────────────────────
+    function bindToggle(btnId, iconId, inputId) {
+        $('#' + btnId).on('click', function() {
+            const $input = $('#' + inputId);
+            const $icon  = $('#' + iconId);
+            const isPass = $input.attr('type') === 'password';
+            $input.attr('type', isPass ? 'text' : 'password');
+            $icon.toggleClass('bi-eye', !isPass).toggleClass('bi-eye-slash', isPass);
+        });
+    }
+    bindToggle('togglePassword', 'togglePasswordIcon', 'password');
+    bindToggle('toggleConfirm',  'toggleConfirmIcon',  'confirm_password');
+
+    // ── Password Strength Evaluator ────────────────────────────
+    const strengthClasses = ['', 'weak', 'fair', 'good', 'strong'];
+    const strengthLabels  = ['', 'Weak', 'Fair', 'Good', 'Strong'];
+    const strengthColors  = ['', '#ef4444', '#f97316', '#eab308', '#22c55e'];
+
+    function evaluateStrength(pwd) {
+        let score = 0;
+        if (pwd.length >= 8)                             score++;
+        if (pwd.length >= 12)                            score++;
+        if (/[A-Z]/.test(pwd) && /[a-z]/.test(pwd))    score++;
+        if (/[0-9]/.test(pwd))                          score++;
+        if (/[^A-Za-z0-9]/.test(pwd))                  score++;
+        return Math.min(4, Math.max(0, Math.round(score * 4 / 5)));
+    }
+
+    $('#password').on('input', function() {
+        const pwd = $(this).val();
+        if (!pwd) {
+            $('#strengthFill').attr('class', 'strength-fill');
+            $('#strengthLabel').text('').css('color', '');
+            return;
+        }
+        const level = evaluateStrength(pwd);
+        $('#strengthFill').attr('class', 'strength-fill ' + (strengthClasses[level] || ''));
+        $('#strengthLabel').text(strengthLabels[level] || '').css('color', strengthColors[level] || '');
+    });
+
+    // ── Form Submission ────────────────────────────────────────
     $form.on('submit', function(e) {
         e.preventDefault();
         clearErrors();
 
-        const username = $('#username').val().trim();
-        const email = $('#email').val().trim();
-        const password = $('#password').val();
+        const username        = $('#username').val().trim();
+        const email           = $('#email').val().trim();
+        const password        = $('#password').val();
         const confirmPassword = $('#confirm_password').val();
 
         let isValid = true;
 
-        // Client-side validations
         if (!username) {
             showError($('#username'), 'Username is required.');
             isValid = false;
         } else if (!/^[a-zA-Z0-9_]{3,30}$/.test(username)) {
-            showError($('#username'), 'Username must be 3-30 characters, containing only letters, numbers, and underscores.');
+            showError($('#username'), 'Username must be 3-30 characters (letters, numbers, underscores only).');
             isValid = false;
         }
 
@@ -91,51 +132,42 @@ $(document).ready(function() {
 
         if (!isValid) return;
 
-        // Disable elements & Show loader
         $submitBtn.prop('disabled', true);
         $btnText.addClass('d-none');
         $btnSpinner.removeClass('d-none');
 
-        // Submit via AJAX
         $.ajax({
             url: 'php/register.php',
             type: 'POST',
             data: {
-                username: username,
-                email: email,
-                password: password,
+                username:         username,
+                email:            email,
+                password:         password,
                 confirm_password: confirmPassword
             },
             dataType: 'json',
             success: function(response) {
                 if (response.status === 'success') {
                     showToast(response.message, 'Success', 'success');
-                    
-                    // Redirect to login page after successful registration
                     setTimeout(function() {
                         window.location.href = 'login.html';
                     }, 2000);
                 } else {
                     showToast(response.message, 'Registration Failed', 'error');
-                    
-                    // If validation field errors are returned
                     if (response.field) {
-                        showError($(`#${response.field}`), response.message);
+                        showError($('#' + response.field), response.message);
                     }
-                    
-                    // Re-enable form
                     $submitBtn.prop('disabled', false);
                     $btnText.removeClass('d-none');
                     $btnSpinner.addClass('d-none');
                 }
             },
-            error: function(xhr, status, error) {
+            error: function(xhr) {
                 let errorMsg = 'An unexpected error occurred on the server.';
                 if (xhr.responseJSON && xhr.responseJSON.message) {
                     errorMsg = xhr.responseJSON.message;
                 }
                 showToast(errorMsg, 'Error', 'error');
-                
                 $submitBtn.prop('disabled', false);
                 $btnText.removeClass('d-none');
                 $btnSpinner.addClass('d-none');

@@ -5,6 +5,8 @@ require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/mongo.php';
 require_once __DIR__ . '/redis.php';
 
+use MongoDB\Collection;
+
 // Retrieve session token from cookie
 $token = $_COOKIE['session_token'] ?? '';
 

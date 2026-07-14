@@ -26,5 +26,6 @@ function getMySQLConnection(): PDO {
         $appDebug = $_ENV['APP_DEBUG'] ?? getenv('APP_DEBUG');
         $errorMsg = ($appDebug === 'true' || $appDebug === '1') ? $e->getMessage() : 'Database connection error';
         sendJSONResponse('error', 'Database connection failed: ' . $errorMsg, [], 500);
+        exit; // unreachable but satisfies static analysis — sendJSONResponse already exits
     }
 }

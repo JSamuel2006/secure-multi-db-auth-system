@@ -44,6 +44,16 @@ $(document).ready(function() {
         $(this).removeClass('is-invalid');
     });
 
+    // ── Show / Hide Password Toggle ────────────────────────────
+    $('#togglePassword').on('click', function() {
+        const $input = $('#password');
+        const $icon  = $('#togglePasswordIcon');
+        const isPass = $input.attr('type') === 'password';
+        $input.attr('type', isPass ? 'text' : 'password');
+        $icon.toggleClass('bi-eye', !isPass).toggleClass('bi-eye-slash', isPass);
+    });
+
+
     // Handle Form Submission
     $form.on('submit', function(e) {
         e.preventDefault();

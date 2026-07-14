@@ -26,8 +26,7 @@ function getRedisConnection(): \Predis\Client {
         $client->connect();
         return $client;
     } catch (\Exception $e) {
-        $appDebug = $_ENV['APP_DEBUG'] ?? getenv('APP_DEBUG');
-        $errorMsg = ($appDebug === 'true' || $appDebug === '1') ? $e->getMessage() : 'Redis connection failed';
-        sendJSONResponse('error', 'Redis connection failed: ' . $errorMsg, [], 500);
+        // Throw so callers can decide whether Redis is required or optional
+        throw new \RuntimeException('Redis connection failed: ' . $e->getMessage(), 0, $e);
     }
 }

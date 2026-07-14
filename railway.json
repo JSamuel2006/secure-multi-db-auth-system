@@ -5,7 +5,6 @@
     "dockerfilePath": "Dockerfile"
   },
   "deploy": {
-    "numReplicas": 1,
-    "sleepOnIdle": false
+    "numReplicas": 1
   }
 }

@@ -37,50 +37,60 @@ try {
     if (!$user || !password_verify($password, $user['password'])) {
         sendJSONResponse('error', 'Invalid credentials.');
     }
-
-    // Generate secure session token (64 hex characters)
-    $token = bin2hex(random_bytes(32));
-
-    // Connect to Redis
-    $redis = getRedisConnection();
-    
-    $userId = (int)$user['id'];
-    $loginTime = time();
-    $sessionKey = "session:" . $token;
-
-    // Store in Redis
-    $redis->hmset($sessionKey, [
-        'user_id' => $userId,
-        'token' => $token,
-        'login_time' => $loginTime
-    ]);
-
-    // TTL: 30 days if remember me, 2 hours if not
-    $ttl = $rememberMe ? 2592000 : 7200;
-    $redis->expire($sessionKey, $ttl);
-
-    // Set HTTPOnly Cookie
-    $cookieExpire = $rememberMe ? (time() + $ttl) : 0;
-    $secure = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') || 
-              (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
-    
-    setcookie('session_token', $token, [
-        'expires' => $cookieExpire,
-        'path' => '/',
-        'domain' => '',
-        'secure' => $secure,
-        'httponly' => true,
-        'samesite' => 'Lax'
-    ]);
-
-    sendJSONResponse('success', 'Login Successful', [
-        'user' => [
-            'id' => $userId,
-            'username' => $user['username']
-        ]
-    ]);
-} catch (\Exception $e) {
+} catch (\PDOException $e) {
     $appDebug = $_ENV['APP_DEBUG'] ?? getenv('APP_DEBUG');
     $errorDetails = ($appDebug === 'true' || $appDebug === '1') ? $e->getMessage() : 'An error occurred during authentication';
     sendJSONResponse('error', 'Login failed: ' . $errorDetails, [], 500);
 }
+
+// Generate secure session token (64 hex characters)
+$token = bin2hex(random_bytes(32));
+$userId   = (int)$user['id'];
+$loginTime = time();
+$ttl = $rememberMe ? 2592000 : 7200;
+
+$secure = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ||
+          (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
+$cookieExpire = $rememberMe ? (time() + $ttl) : 0;
+
+// Try Redis session — fall back to PHP native sessions if unavailable
+try {
+    $redis = getRedisConnection();
+    $sessionKey = "session:" . $token;
+
+    $redis->hmset($sessionKey, [
+        'user_id'    => $userId,
+        'token'      => $token,
+        'login_time' => $loginTime
+    ]);
+    $redis->expire($sessionKey, $ttl);
+} catch (\Exception $redisEx) {
+    // Redis unavailable — use PHP native sessions as fallback
+    error_log('[NuraAuth] Redis unavailable, falling back to PHP sessions: ' . $redisEx->getMessage());
+
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+    $_SESSION['user_id']    = $userId;
+    $_SESSION['username']   = $user['username'];
+    $_SESSION['login_time'] = $loginTime;
+    $_SESSION['token']      = $token;
+    session_regenerate_id(true);
+}
+
+// Set HTTPOnly Cookie (works for both Redis and PHP session paths)
+setcookie('session_token', $token, [
+    'expires'  => $cookieExpire,
+    'path'     => '/',
+    'domain'   => '',
+    'secure'   => $secure,
+    'httponly' => true,
+    'samesite' => 'Lax'
+]);
+
+sendJSONResponse('success', 'Login Successful', [
+    'user' => [
+        'id'       => $userId,
+        'username' => $user['username']
+    ]
+]);

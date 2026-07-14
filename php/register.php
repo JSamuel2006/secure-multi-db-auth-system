@@ -4,6 +4,8 @@ require_once __DIR__ . '/bootstrap.php';
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/mongo.php';
 
+use MongoDB\Collection;
+
 // Accept only POST requests
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     sendJSONResponse('error', 'Method not allowed', [], 405);
@@ -75,28 +77,31 @@ try {
     $insertUser->execute([$username, $email, $hashedPassword]);
     $userId = (int)$mysql->lastInsertId();
 
-    // MongoDB Profile Insert
-    $mongo = getMongoConnection();
-    $profiles = $mongo->selectCollection('profiles');
-    
-    $profiles->insertOne([
-        'user_id' => $userId,
-        'name' => '',
-        'age' => '',
-        'bio' => '',
-        'interests' => []
-    ]);
-
-    // Commit MySQL transaction if MongoDB insert succeeds
+    // Commit MySQL — user account is now persisted
     $mysql->commit();
-
-    sendJSONResponse('success', 'Registration Successful. You can now login.');
 } catch (\Exception $e) {
     if ($mysql->inTransaction()) {
         $mysql->rollBack();
     }
-    
     $appDebug = $_ENV['APP_DEBUG'] ?? getenv('APP_DEBUG');
     $errorDetails = ($appDebug === 'true' || $appDebug === '1') ? $e->getMessage() : 'Transaction processing failed';
     sendJSONResponse('error', 'Registration failed: ' . $errorDetails, [], 500);
 }
+
+// MongoDB Profile Insert — optional, skipped gracefully if MongoDB is unavailable
+try {
+    $mongo = getMongoConnection();
+    $profiles = $mongo->selectCollection('profiles');
+    $profiles->insertOne([
+        'user_id'   => $userId,
+        'name'      => '',
+        'age'       => '',
+        'bio'       => '',
+        'interests' => []
+    ]);
+} catch (\Exception $mongoEx) {
+    // MongoDB unavailable — profile will be created on first access
+    error_log('[NuraAuth] MongoDB profile insert skipped: ' . $mongoEx->getMessage());
+}
+
+sendJSONResponse('success', 'Registration Successful. You can now login.');

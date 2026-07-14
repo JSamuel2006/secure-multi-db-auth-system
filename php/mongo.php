@@ -2,10 +2,13 @@
 // php/mongo.php
 require_once __DIR__ . '/bootstrap.php';
 
+use MongoDB\Client;
+use MongoDB\Database;
+
 /**
  * Returns a MongoDB Database connection.
  */
-function getMongoConnection(): \MongoDB\Database {
+function getMongoConnection(): Database {
     $uri = $_ENV['MONGO_URI'] ?? getenv('MONGO_URI') ?: 
            $_ENV['MONGODB_URL'] ?? getenv('MONGODB_URL') ?: 
            $_ENV['MONGO_URL'] ?? getenv('MONGO_URL') ?: 
@@ -18,11 +21,10 @@ function getMongoConnection(): \MongoDB\Database {
     }
 
     try {
-        $client = new MongoDB\Client($uri);
+        $client = new Client($uri);
         return $client->selectDatabase($dbName);
     } catch (\Exception $e) {
-        $appDebug = $_ENV['APP_DEBUG'] ?? getenv('APP_DEBUG');
-        $errorMsg = ($appDebug === 'true' || $appDebug === '1') ? $e->getMessage() : 'MongoDB connection failed';
-        sendJSONResponse('error', 'MongoDB connection failed: ' . $errorMsg, [], 500);
+        // Throw so callers can decide whether MongoDB is required or optional
+        throw new \RuntimeException('MongoDB connection failed: ' . $e->getMessage(), 0, $e);
     }
 }

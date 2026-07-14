@@ -215,6 +215,7 @@ select.glass-input option {
     letter-spacing: 1px;
     background: var(--accent-glow);
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
@@ -276,3 +277,53 @@ select.glass-input option {
     border-width: 0.15em;
     margin-right: 0.5rem;
 }
+
+/* ── Show / Hide password toggle ─────────────────────────── */
+.btn-toggle-pass {
+    position: absolute;
+    top: 50%;
+    right: 0.85rem;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 1.05rem;
+    padding: 0.25rem;
+    line-height: 1;
+    z-index: 10;
+    transition: color 0.2s ease;
+}
+
+.btn-toggle-pass:hover {
+    color: var(--accent-blue);
+}
+
+/* ── Password strength bar ──────────────────────────────── */
+.strength-track {
+    height: 5px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 99px;
+    overflow: hidden;
+}
+
+.strength-fill {
+    height: 100%;
+    width: 0%;
+    border-radius: 99px;
+    transition: width 0.4s ease, background 0.4s ease;
+}
+
+.strength-fill.weak     { width: 25%; background: #ef4444; }
+.strength-fill.fair     { width: 50%; background: #f97316; }
+.strength-fill.good     { width: 75%; background: #eab308; }
+.strength-fill.strong   { width: 100%; background: #22c55e; }
+
+.strength-label {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
